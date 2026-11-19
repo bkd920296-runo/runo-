@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runo V2 — Productivity Monitor</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#182235;--muted:#6e7890;--blue:#4263eb;--line:#e7eaf2;--green:#16a36a;--red:#e55353}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+.app{max-width:1100px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.brand{font-size:24px;font-weight:800;letter-spacing:-1px}.brand span{color:var(--blue)}.pill{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 12px;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 5px 24px #17223b08}.card h2,.card h3{margin:0 0 14px}.muted{color:var(--muted)}.small{font-size:13px}.timer{text-align:center;padding:12px 0 4px}.mode{display:flex;gap:8px;justify-content:center}.mode button,.nav button{border:0;background:#edf1ff;color:#4558a8;padding:9px 13px;border-radius:10px;cursor:pointer;font-weight:650}.mode button.active{background:var(--blue);color:white}.clock{font-size:72px;font-weight:800;letter-spacing:-4px;margin:15px 0 5px}.timer-actions{display:flex;justify-content:center;gap:10px}.primary{background:var(--blue)!important;color:white!important}.timer-actions button{border:0;border-radius:12px;padding:12px 22px;font-weight:700;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.stat{background:#f8f9fc;border-radius:14px;padding:14px}.stat b{font-size:23px;display:block;margin:5px 0}.stat span{font-size:12px;color:var(--muted)}.section{margin-top:16px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.task-input{display:flex;gap:8px;margin-bottom:12px}.input{border:1px solid var(--line);border-radius:11px;padding:11px;flex:1;min-width:0;font:inherit}.add{background:var(--blue);color:white;border:0;border-radius:11px;padding:0 15px;font-weight:700;cursor:pointer}.task{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:12px 0}.task:last-child{border:0}.task.done .taskname{text-decoration:line-through;color:#9aa2b3}.taskname{flex:1}.task button{border:0;background:none;color:var(--muted);cursor:pointer}.barrow{display:flex;align-items:center;gap:10px;margin:10px 0}.barlabel{width:72px;color:var(--muted);font-size:13px}.bar{height:10px;background:#edf0f6;border-radius:99px;flex:1;overflow:hidden}.fill{height:100%;background:var(--blue);border-radius:99px}.barval{width:40px;text-align:right;font-size:12px;color:var(--muted)}.insight{padding:12px;background:#eff3ff;border-radius:13px;color:#3e5197;font-size:14px;margin-top:10px}.nav{display:flex;gap:8px;margin:16px 0}.nav button{background:transparent;color:var(--muted)}.nav button.active{background:#e7ecff;color:var(--blue)}.hidden{display:none}.chart{height:145px;display:flex;align-items:end;gap:10px;padding:12px 4px 0;border-bottom:1px solid var(--line)}.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:6px}.col .barv{width:70%;max-width:34px;background:linear-gradient(180deg,#6681ff,#4263eb);border-radius:8px 8px 2px 2px;min-height:3px}.col small{font-size:11px;color:var(--muted)}.footer{margin:18px 0;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.app{padding:14px}.clock{font-size:64px}}
+</style>
+</head>
+<body><main class="app">
+<header class="top"><div class="brand">ru<span>no</span> <small style="font-size:12px;color:var(--muted);font-weight:600">V2</small></div><div class="pill" id="today"></div></header>
+<div class="nav"><button class="active" data-page="dashboard">Dashboard</button><button data-page="analysis">Analysis</button><button data-page="tasks">Tasks</button></div>
+<section id="dashboard">
+<div class="stats">
+<div class="stat"><span>Focus today</span><b id="todayFocus">0m</b><span>total focused time</span></div>
+<div class="stat"><span>Sessions</span><b id="todaySessions">0</b><span>completed today</span></div>
+<div class="stat"><span>Tasks completed</span><b id="completedCount">0</b><span>today / all-time</span></div>
+<div class="stat"><span>Focus streak</span><b id="streak">0</b><span>consecutive days</span></div>
+</div>
+<div class="grid">
+<div class="card">
+<h2>Focus monitor</h2><div class="timer">
+<div class="mode"><button class="active" data-mode="focus">Focus</button><button data-mode="short">Short break</button><button data-mode="long">Long break</button></div>
+<div class="clock" id="clock">25:00</div><div class="muted small" id="timerStatus">Ready when you are</div>
+<p class="muted small" id="activeTaskLabel">No active task selected</p>
+<div class="timer-actions"><button class="primary" id="start">Start</button><button id="reset" style="background:#edf0f6;color:#334">Reset</button></div>
+</div>
+<div class="section"><div class="row"><h3>Today's focus target</h3><span class="muted small" id="goalText">0 / 120 min</span></div><div class="bar"><div class="fill" id="goalFill" style="width:0%"></div></div></div>
+</div>
+<div class="card"><h2>Quick analysis</h2><div id="insights"></div><div class="section"><h3>Last 7 days</h3><div class="chart" id="chart"></div></div></div>
+</div>
+<div class="card section"><div class="row"><h2>Today's tasks</h2><button class="add" onclick="showPage('tasks')">Manage tasks</button></div><div id="dashTasks"></div></div>
+</section>
+<section id="analysis" class="hidden">
+<div class="stats"><div class="stat"><span>All-time focus</span><b id="allFocus">0h</b></div><div class="stat"><span>Sessions total</span><b id="allSessions">0</b></div><div class="stat"><span>Task completion</span><b id="completion">0%</b></div><div class="stat"><span>Average session</span><b id="average">0m</b></div></div>
+<div class="grid"><div class="card"><h2>Focus history</h2><div class="chart" id="analysisChart"></div><p class="muted small">Daily completed focus minutes for the past 7 days.</p></div><div class="card"><h2>Behavior insights</h2><div id="deepInsights"></div></div></div>
+<div class="card section"><h2>Task performance</h2><div id="taskAnalysis"></div></div>
+</section>
+<section id="tasks" class="hidden"><div class="card"><h2>Task tracker</h2><div class="task-input"><input class="input" id="taskInput" placeholder="Add a task (e.g. Learn Flutter)"><button class="add" id="addTask">Add task</button></div><div id="taskList"></div></div></section>
+<div class="footer">Runo stores your data locally in this browser. Your activity is not uploaded.</div>
+</main>
+<script>
+const KEY='runo_v2_data';let data=JSON.parse(localStorage.getItem(KEY)||'{"tasks":[],"sessions":[],"goal":120}');let mode='focus',durations={focus:25,short:5,long:15},remaining=1500,interval=null,activeTask=null;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function dayKey(d=new Date()){return d.toISOString().slice(0,10)}
+function sessionsToday(){return data.sessions.filter(s=>s.date===dayKey())}
+function todayMinutes(){return sessionsToday().reduce((a,s)=>a+s.minutes,0)}
+function fmt(n){return n<60?`${n}m`:`${Math.floor(n/60)}h ${n%60}m`}
+function showPage(p){document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));$(p).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p))}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+document.querySelectorAll('.mode button').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;remaining=durations[mode]*60;document.querySelectorAll('.mode button').forEach(x=>x.classList.toggle('active',x===b));updateClock()});
+function updateClock(){$('clock').textContent=`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`}
+$('start').onclick=()=>{if(interval){clearInterval(interval);interval=null;$('start').textContent='Resume';$('timerStatus').textContent='Paused';return}interval=setInterval(()=>{remaining--;updateClock();if(remaining<=0){clearInterval(interval);interval=null;$('start').textContent='Start';if(mode==='focus'){data.sessions.push({date:dayKey(),minutes:durations.focus,task:activeTask});save();$('timerStatus').textContent='Focus session completed!'}else $('timerStatus').textContent='Break complete';remaining=durations[mode]*60;updateClock()}},1000);$('start').textContent='Pause';$('timerStatus').textContent='Monitoring your focus session…'};
+$('reset').onclick=()=>{clearInterval(interval);interval=null;remaining=durations[mode]*60;updateClock();$('start').textContent='Start';$('timerStatus').textContent='Ready when you are'};
+$('addTask').onclick=addTask;$('taskInput').onkeydown=e=>{if(e.key==='Enter')addTask()};
+function addTask(){let v=$('taskInput').value.trim();if(!v)return;data.tasks.push({id:Date.now(),name:v,done:false,created:dayKey()});$('taskInput').value='';save()}
+function toggleTask(id){let t=data.tasks.find(x=>x.id===id);if(t){t.done=!t.done;t.doneDate=t.done?dayKey():null;save()}}
+function removeTask(id){data.tasks=data.tasks.filter(t=>t.id!==id);save()}
+function setActive(id){activeTask=data.tasks.find(t=>t.id===id)?.name||null;$('activeTaskLabel').textContent=activeTask?`Working on: ${activeTask}`:'No active task selected'}
+function taskHTML(t){return `<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id})"><span class="taskname" onclick="setActive(${t.id})" style="cursor:pointer">${esc(t.name)}</span><button onclick="removeTask(${t.id})">×</button></div>`}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderChart(el){let days=[];for(let i=6;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);let key=dayKey(d),mins=data.sessions.filter(s=>s.date===key).reduce((a,s)=>a+s.minutes,0);days.push({label:d.toLocaleDateString(undefined,{weekday:'short'}),mins})}let max=Math.max(30,...days.map(d=>d.mins));$(el).innerHTML=days.map(d=>`<div class="col"><div class="barv" style="height:${Math.max(3,d.mins/max*100)}%" title="${d.mins} min"></div><small>${d.label}</small></div>`).join('')}
+function render(){
+let today=sessionsToday(),mins=todayMinutes(),done=data.tasks.filter(t=>t.done).length;
+$('todayFocus').textContent=fmt(mins);$('todaySessions').textContent=today.length;$('completedCount').textContent=done;$('streak').textContent=calcStreak();
+$('goalText').textContent=`${mins} / ${data.goal} min`;$('goalFill').style.width=Math.min(100,mins/data.goal*100)+'%';
+$('dashTasks').innerHTML=data.tasks.slice(0,5).map(taskHTML).join('')||'<p class="muted">No tasks yet. Add one to begin tracking.</p>';
+$('taskList').innerHTML=data.tasks.map(taskHTML).join('')||'<p class="muted">Your tasks will appear here.</p>';
+$('allFocus').textContent=fmt(data.sessions.reduce((a,s)=>a+s.minutes,0));$('allSessions').textContent=data.sessions.length;
+$('completion').textContent=data.tasks.length?Math.round(done/data.tasks.length*100)+'%':'0%';$('average').textContent=data.sessions.length?fmt(Math.round(data.sessions.reduce((a,s)=>a+s.minutes,0)/data.sessions.length)):'0m';
+renderChart('chart');renderChart('analysisChart');
+let insight=mins>=data.goal?'You reached your focus goal. Great consistency!':today.length===0?'No focus sessions recorded today yet. Start a session to build your baseline.':`You have ${data.goal-mins} minutes left to reach today's focus goal.`;
+$('insights').innerHTML=`<div class="insight">${insight}</div><div class="insight">Today's average session: ${today.length?fmt(Math.round(mins/today.length)):'—'}</div><div class="insight">Completed tasks: ${done} of ${data.tasks.length}</div>`;
+$('deepInsights').innerHTML=`<div class="insight">${data.sessions.length?`You've logged ${data.sessions.length} focus sessions. Your total focus time is ${fmt(data.sessions.reduce((a,s)=>a+s.minutes,0))}.`:'Complete focus sessions to unlock meaningful trends.'}</div><div class="insight">Goal progress: ${Math.min(100,Math.round(mins/data.goal*100))}% of today's target.</div><div class="insight">Most recent focus date: ${data.sessions.length?data.sessions[data.sessions.length-1].date:'None yet'}</div>`;
+$('taskAnalysis').innerHTML=data.tasks.map(t=>`<div class="barrow"><span class="barlabel">${esc(t.name.slice(0,14))}</span><div class="bar"><div class="fill" style="width:${t.done?100:0}%"></div></div><span class="barval">${t.done?'Done':'Open'}</span></div>`).join('')||'<p class="muted">Add tasks to analyze progress.</p>';
+}
+function calcStreak(){let n=0,d=new Date();for(;;){let k=dayKey(d);if(data.sessions.some(s=>s.date===k)){n++;d.setDate(d.getDate()-1)}else break}return n}
+$('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+updateClock();render();
+</script></body></html>
