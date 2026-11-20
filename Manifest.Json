@@ -1,0 +1,18 @@
+{
+  "name": "Runo V2",
+  "short_name": "Runo",
+  "description": "Focus, productivity, and task tracking",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4361ee",
+  "background_color": "#f5f6fc",
+  "icons": [
+    {
+      "src": "./runo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
