@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0B1016">
+<meta name="description" content="Vtwo translates your voice and text into any language.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vtwo">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<title>Vtwo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<!-- Google Identity Services (loaded async, non-blocking) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface2:#E3E8F0; --fg:#101626; --muted:#566077; --line:#D2D9E5;
+  --accent:#0A8C87; --on-accent:#FFFFFF; --danger:#C62F3B; --shadow:rgba(16,22,38,.14);
+  --display:'Space Grotesk','Inter',system-ui,sans-serif; --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1016; --surface:#141B24; --surface2:#1D2631; --fg:#EAF0F7; --muted:#8B97AA; --line:#263140;
+  --accent:#3EE0C8; --on-accent:#06201C; --danger:#FF7A85; --shadow:rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1016; --surface:#141B24; --surface2:#1D2631; --fg:#EAF0F7; --muted:#8B97AA; --line:#263140;
+  --accent:#3EE0C8; --on-accent:#06201C; --danger:#FF7A85; --shadow:rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:38px;height:38px;display:block}
+.brand b{font-family:var(--display);font-size:22px;letter-spacing:-.02em}
+.iconbtn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line)}
+.iconbtn svg{width:22px;height:22px;stroke:var(--fg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pair{display:flex;align-items:center;gap:8px;margin:4px 0 10px}
+.pair button{flex:1;min-width:0;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.pair small{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.pair span{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pair .swap{flex:0 0 40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface2);padding:0}
+.pair .swap svg{width:18px;height:18px;stroke:var(--fg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.thread{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 0 12px;-webkit-overflow-scrolling:touch}
+.turn{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px 10px}
+.turn .orig{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.turn .orig i{font-style:normal;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-right:6px}
+.turn .tr{font-family:var(--display);font-weight:500;font-size:22px;line-height:1.3;margin:8px 0 2px;overflow-wrap:anywhere}
+.turn .pron{color:var(--accent);font-size:14px;margin:0 0 4px;overflow-wrap:anywhere}
+.turn .acts{display:flex;gap:6px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);font-size:13px;font-weight:500}
+.chip svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.live{border:1px dashed var(--accent);border-radius:16px;padding:14px;color:var(--muted)}
+.live b{color:var(--accent);font-weight:600}
+.empty{margin:auto 0;padding:12px 4px}
+.empty h2{font-family:var(--display);font-size:26px;line-height:1.2;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+.empty p{margin:0 0 14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips .chip{height:auto;min-height:36px;padding:6px 12px;text-align:left}
+.typebar{display:flex;gap:8px;margin-bottom:10px}
+.typebar input{flex:1;min-width:0;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:0 14px;font:inherit}
+.typebar button{height:44px;padding:0 16px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:600}
+.dock{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 0 14px;gap:12px}
+.dock .side{width:64px;height:64px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600}
+.dock .side svg{width:24px;height:24px;stroke:var(--fg);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dock .l{justify-self:start}.dock .r{justify-self:end}
+.mic{display:flex;flex-direction:column;align-items:center;gap:6px}
+.mic button{width:88px;height:88px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 8px 24px var(--shadow);position:relative}
+.mic button svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mic button.on::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--accent);animation:pulse 1.2s ease-out infinite}
+@keyframes pulse{from{transform:scale(.9);opacity:.9}to{transform:scale(1.25);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mic button.on::after{animation:none}}
+.mic span{font-size:12px;font-weight:600;color:var(--muted);min-height:18px}
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,8,14,.55)}
+.panel{width:100%;max-width:480px;max-height:92%;height:92%;background:var(--bg);border-radius:20px 20px 0 0;display:flex;flex-direction:column;
+  padding:0 max(16px,env(safe-area-inset-left,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-right,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}}
+.phead{display:flex;align-items:center;gap:8px;padding:14px 0 10px}
+.phead h2{flex:1;margin:0;font-family:var(--display);font-size:20px;letter-spacing:-.01em}
+.pbody{flex:1;min-height:0;overflow-y:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch}
+.group{margin:0 0 16px}
+.group>h3{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px;background:var(--surface);border:1px solid var(--line);margin-top:-1px;min-height:52px}
+.group .row:first-of-type{border-radius:12px 12px 0 0;margin-top:0}
+.group .row:last-child{border-radius:0 0 12px 12px}
+.group .row:only-of-type{border-radius:12px}
+.row .t{flex:1;min-width:0}
+.row .t small{display:block;color:var(--muted);font-size:12.5px}
+.row svg.chev{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2}
+.tog{width:46px;height:28px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);position:relative;flex:0 0 46px}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .15s}
+.tog[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.tog[aria-checked="true"]::after{transform:translateX(18px);background:var(--on-accent)}
+.btn{height:44px;padding:0 16px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.ghost{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
+.btn.danger{background:var(--surface);color:var(--danger);border:1px solid var(--danger)}
+.btn.google{background:#fff;color:#3c4043;border:1px solid #dadce0;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.field{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:0 14px;font:inherit}
+textarea.field{height:120px;padding:12px 14px;resize:none}
+.note{color:var(--muted);font-size:13px;margin:8px 2px 0}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface2);padding:4px;border-radius:12px;margin-bottom:10px}
+.seg button{height:38px;border-radius:9px;font-weight:600;font-size:13.5px;color:var(--muted)}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px var(--shadow)}
+.lang{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 4px;border-bottom:1px solid var(--line)}
+.lang small{color:var(--muted)}
+.lang[aria-current="true"]{color:var(--accent);font-weight:600}
+.lang[aria-current="true"]::after{content:"Selected";font-size:12px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.tile b{display:block;font-family:var(--display);font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile small{color:var(--muted);font-size:12px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 12px 8px;margin-bottom:16px}
+.chart h3{margin:0 0 10px;font-size:13px;font-weight:600}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:110px}
+.bar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;min-width:0}
+.bar i{display:block;width:100%;max-width:30px;border-radius:6px 6px 2px 2px;background:var(--accent);min-height:3px}
+.bar i.zero{background:var(--line)}
+.bar em{font-style:normal;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:4px}
+.days span{text-align:center;font-size:11px;color:var(--muted)}
+.days span.today{color:var(--fg);font-weight:700}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);margin-left:6px;vertical-align:middle}
+.hist{padding:12px 0;border-bottom:1px solid var(--line)}
+.hist .o{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.hist .n{font-weight:600;overflow-wrap:anywhere}
+.hist .m{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:12px;color:var(--muted)}
+.hist .m button{color:var(--accent);font-weight:600;font-size:13px;padding:6px}
+.toast{position:fixed;left:50%;bottom:calc(120px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--fg);color:var(--bg);
+  padding:10px 16px;border-radius:12px;font-size:14px;max-width:min(440px,calc(100% - 32px));text-align:center;box-shadow:0 6px 20px var(--shadow)}
+[hidden]{display:none!important}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="16" fill="var(--surface)" stroke="var(--line)"/>
+        <path d="M13 14 L32 52 L51 14" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path id="two" d="M24 27 C24 15 45 15 45 27 C45 35 31 40 25 51 L47 51" stroke="var(--surface)" stroke-width="11"/>
+          <path d="M24 27 C24 15 45 15 45 27 C45 35 31 40 25 51 L47 51" stroke="var(--fg)" stroke-width="5"/>
+        </g>
+      </svg>
+      <b>Vtwo</b>
+    </div>
+    <button class="iconbtn" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </header>
+
+  <div class="pair">
+    <button id="srcBtn"><small>From</small><span id="srcName">Detect language</span></button>
+    <button class="swap" id="swapBtn" aria-label="Swap languages"><svg viewBox="0 0 24 24"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></svg></button>
+    <button id="tgtBtn"><small>To</small><span id="tgtName">Nepali</span></button>
+  </div>
+
+  <main class="thread" id="thread" aria-live="polite"></main>
+
+  <form class="typebar" id="typebar" hidden>
+    <input id="typeInput" type="text" placeholder="Type to translate" autocomplete="off" enterkeyhint="send">
+    <button type="submit">Translate</button>
+  </form>
+
+  <nav class="dock">
+    <button class="side l" id="statsBtn" aria-label="Daily analysis">
+      <svg viewBox="0 0 24 24"><path d="M3 20h18M6 16V11M11 16V6M16 16v-4M21 16V9"/></svg>Analysis
+    </button>
+    <div class="mic">
+      <button id="micBtn" aria-label="Tap to speak">
+        <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+      <span id="micLabel">Tap to speak</span>
+    </div>
+    <button class="side r" id="langBtn" aria-label="Language">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Language
+    </button>
+  </nav>
+</div>
+<div id="layer"></div>
+<div id="toastHost"></div>
+
+<script>
+"use strict";
+/* ---------- data ---------- */
+const LANG_SRC = `en|English|English
+ne|Nepali|नेपाली
+hi|Hindi|हिन्दी
+bn|Bengali|বাংলা
+ur|Urdu|اردو
+pa|Punjabi|ਪੰਜਾਬੀ
+gu|Gujarati|ગુજરાતી
+mr|Marathi|मराठी
+ta|Tamil|தமிழ்
+te|Telugu|తెలుగు
+kn|Kannada|ಕನ್ನಡ
+ml|Malayalam|മലയാളം
+or|Odia|ଓଡ଼ିଆ
+as|Assamese|অসমীয়া
+si|Sinhala|සිංහල
+sa|Sanskrit|संस्कृतम्
+mai|Maithili|मैथिली
+bho|Bhojpuri|भोजपुरी
+new|Newar (Nepal Bhasa)|नेपाल भाषा
+dz|Dzongkha|རྫོང་ཁ
+bo|Tibetan|བོད་སྐད་
+sd|Sindhi|سنڌي
+ps|Pashto|پښتو
+fa|Persian|فارسی
+ar|Arabic|العربية
+he|Hebrew|עברית
+ku|Kurdish|Kurdî
+tr|Turkish|Türkçe
+az|Azerbaijani|Azərbaycanca
+ka|Georgian|ქართული
+hy|Armenian|Հայերեն
+kk|Kazakh|Қазақша
+uz|Uzbek|Oʻzbekcha
+ky|Kyrgyz|Кыргызча
+tg|Tajik|Тоҷикӣ
+tk|Turkmen|Türkmençe
+mn|Mongolian|Монгол
+zh-CN|Chinese (Simplified)|简体中文
+zh-TW|Chinese (Traditional)|繁體中文
+yue|Cantonese|粵語
+ja|Japanese|日本語
+ko|Korean|한국어
+th|Thai|ไทย
+vi|Vietnamese|Tiếng Việt
+id|Indonesian|Bahasa Indonesia
+ms|Malay|Bahasa Melayu
+fil|Filipino|Filipino
+ceb|Cebuano|Cebuano
+ilo|Ilocano|Ilokano
+jv|Javanese|Basa Jawa
+su|Sundanese|Basa Sunda
+my|Burmese|မြန်မာ
+km|Khmer|ខ្មែរ
+lo|Lao|ລາວ
+es|Spanish|Español
+pt|Portuguese|Português
+fr|French|Français
+de|German|Deutsch
+it|Italian|Italiano
+nl|Dutch|Nederlands
+ru|Russian|Русский
+uk|Ukrainian|Українська
+be|Belarusian|Беларуская
+pl|Polish|Polski
+cs|Czech|Čeština
+sk|Slovak|Slovenčina
+hu|Hungarian|Magyar
+ro|Romanian|Română
+bg|Bulgarian|Български
+sr|Serbian|Српски
+hr|Croatian|Hrvatski
+bs|Bosnian|Bosanski
+sl|Slovenian|Slovenščina
+mk|Macedonian|Македонски
+sq|Albanian|Shqip
+el|Greek|Ελληνικά
+sv|Swedish|Svenska
+no|Norwegian|Norsk
+da|Danish|Dansk
+fi|Finnish|Suomi
+is|Icelandic|Íslenska
+et|Estonian|Eesti
+lv|Latvian|Latviešu
+lt|Lithuanian|Lietuvių
+ga|Irish|Gaeilge
+gd|Scottish Gaelic|Gàidhlig
+cy|Welsh|Cymraeg
+br|Breton|Brezhoneg
+eu|Basque|Euskara
+ca|Catalan|Català
+gl|Galician|Galego
+mt|Maltese|Malti
+lb|Luxembourgish|Lëtzebuergesch
+fy|Frisian|Frysk
+co|Corsican|Corsu
+la|Latin|Latina
+eo|Esperanto|Esperanto
+yi|Yiddish|ייִדיש
+sw|Swahili|Kiswahili
+am|Amharic|አማርኛ
+ti|Tigrinya|ትግርኛ
+om|Oromo|Afaan Oromoo
+so|Somali|Soomaali
+ha|Hausa|Hausa
+yo|Yoruba|Yorùbá
+ig|Igbo|Igbo
+zu|Zulu|isiZulu
+xh|Xhosa|isiXhosa
+af|Afrikaans|Afrikaans
+st|Sesotho|Sesotho
+tn|Tswana|Setswana
+sn|Shona|chiShona
+rw|Kinyarwanda|Ikinyarwanda
+lg|Luganda|Luganda
+ln|Lingala|Lingála
+wo|Wolof|Wolof
+mg|Malagasy|Malagasy
+ny|Chichewa|Chichewa
+ht|Haitian Creole|Kreyòl ayisyen
+qu|Quechua|Runasimi
+gn|Guarani|Avañe'ẽ
+ay|Aymara|Aymar aru
+haw|Hawaiian|ʻŌlelo Hawaiʻi
+mi|Maori|Te Reo Māori
+sm|Samoan|Gagana Samoa
+to|Tongan|Lea faka-Tonga
+fj|Fijian|Na Vosa Vakaviti`;
+const LANGS = LANG_SRC.split("\n").map(l => { const [code, name, native] = l.split("|"); return {code, name, native}; });
+const byCode = Object.fromEntries(LANGS.map(l => [l.code, l]));
+const EXAMPLES = ["Where is the nearest hospital?", "How much does this cost?", "I would like a table for two.", "Thank you for your help."];
+
+/* ---------- state + storage ---------- */
+const K = "vtwo.v2";
+const defaults = {
+  src:"auto", tgt:"ne",
+  settings:{saveHistory:true, autoSpeak:false, typeBar:false, name:""},
+  auth:{signedIn:false, provider:null, email:null, phone:null, name:null, picture:null},
+  history:[], usage:{}
+};
+let S = structuredClone(defaults);
+try { const raw = localStorage.getItem(K); if (raw) S = deepMerge(structuredClone(defaults), JSON.parse(raw)); } catch(e){}
+function deepMerge(a,b){ for(const k in b){ if(b[k] && typeof b[k]==="object" && !Array.isArray(b[k])){ a[k]=deepMerge(a[k]||{},b[k]); } else a[k]=b[k]; } return a; }
+function save(){ try { localStorage.setItem(K, JSON.stringify(S)); } catch(e){} }
+const dayKey = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+function usageToday(){ return (S.usage[dayKey()] ||= {n:0, secs:0}); }
+
+function lname(code){
+  if (code === "auto") return "Detect language";
+  if (code.startsWith("x:")) return code.slice(2);
+  return byCode[code] ? byCode[code].name : code;
+}
+const REGION = {en:"en-US",ne:"ne-NP",hi:"hi-IN",bn:"bn-BD",ur:"ur-PK",pa:"pa-IN",gu:"gu-IN",mr:"mr-IN",ta:"ta-IN",te:"te-IN",kn:"kn-IN",ml:"ml-IN",si:"si-LK",ar:"ar-SA",fa:"fa-IR",he:"he-IL",tr:"tr-TR",th:"th-TH",vi:"vi-VN",id:"id-ID",ms:"ms-MY",ja:"ja-JP",ko:"ko-KR",yue:"zh-HK",fil:"fil-PH",es:"es-ES",pt:"pt-BR",fr:"fr-FR",de:"de-DE",it:"it-IT",ru:"ru-RU",uk:"uk-UA",pl:"pl-PL",nl:"nl-NL",sv:"sv-SE",el:"el-GR",sw:"sw-KE",af:"af-ZA",am:"am-ET",my:"my-MM",km:"km-KH",lo:"lo-LA",cs:"cs-CZ",hu:"hu-HU",ro:"ro-RO",da:"da-DK",fi:"fi-FI",no:"nb-NO",jv:"jv-ID",su:"su-ID",kk:"kk-KZ",uz:"uz-UZ",mn:"mn-MN",ka:"ka-GE",hy:"hy-AM",az:"az-AZ",sq:"sq-AL",bg:"bg-BG",hr:"hr-HR",sr:"sr-RS",sk:"sk-SK",sl:"sl-SI",lt:"lt-LT",lv:"lv-LV",et:"et-EE",is:"is-IS",ca:"ca-ES",eu:"eu-ES",gl:"gl-ES",zu:"zu-ZA"};
+function speechCode(code){ return code.startsWith("x:") || code === "auto" ? "" : (REGION[code] || code); }
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+
+/* ---------- auth (Google Identity Services + demo fallbacks) ---------- */
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // <-- replace
+let googleReady = false;
+
+function decodeJwt(t){ try{ const p = JSON.parse(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))); return p; }catch(e){ return null; } }
+
+function authState(){
+  return S.auth && S.auth.signedIn ? S.auth : null;
+}
+function isSignedIn(){ return !!authState(); }
+
+function signInWithGoogle(){
+  // If GIS is loaded and a real Client ID is configured, use real Google Sign-In
+  if (googleReady && window.google && window.google.accounts && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_")) {
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: (resp) => {
+        const p = decodeJwt(resp.credential) || {};
+        S.auth = { signedIn:true, provider:"Google", email:p.email||null, name:p.name||null, picture:p.picture||null, phone:null };
+        if (!S.settings.name && p.name) S.settings.name = p.name;
+        save(); closeAllSheets(); toast("Signed in as " + (p.email || "Google user"));
+        openAccount();
+      }
+    });
+    window.google.accounts.id.prompt();
+    return;
+  }
+  // Fallback: demo mode (no real auth)
+  S.auth = { signedIn:true, provider:"Google", email:"user@gmail.com", name:S.settings.name || "Google user", picture:null, phone:null };
+  save(); toast("Demo sign-in with Google"); closeAllSheets(); openAccount();
+}
+function signInWithGmail(){
+  S.auth = { signedIn:true, provider:"Gmail", email:"user@gmail.com", name:S.settings.name || "Gmail user", picture:null, phone:null };
+  save(); toast("Demo sign-in with Gmail"); closeAllSheets(); openAccount();
+}
+function signOut(){
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    try { window.google.accounts.id.disableAutoSelect(); } catch(e){}
+  }
+  S.auth = { signedIn:false, provider:null, email:null, phone:null, name:null, picture:null };
+  save(); toast("Signed out"); closeAllSheets();
+}
+
+function openPhoneAuth(){
+  openSheet("Phone number", '<div class="group"><h3>Your mobile number</h3>' +
+    '<input class="field" id="phoneInput" type="tel" inputmode="tel" placeholder="+1 555 123 4567" autocomplete="tel" aria-label="Phone number" style="margin-bottom:8px">' +
+    '<button class="btn" id="phoneGo" style="width:100%">Continue</button></div>' +
+    '<p class="note">Demo only — any valid-looking number signs you in locally without verification.</p>', el => {
+    el.querySelector("#phoneGo").addEventListener("click", () => {
+      const val = el.querySelector("#phoneInput").value.trim();
+      if (!val || val.replace(/\D/g,"").length < 6) return toast("Enter a valid phone number.");
+      S.auth = { signedIn:true, provider:"Phone", email:null, name:S.settings.name || "Phone user", picture:null, phone:val };
+      save(); toast("Signed in with phone number"); closeAllSheets(); openAccount();
+    });
+  });
+}
+
+function openSignIn(){
+  openSheet("Sign in", '<div class="group"><h3>Continue with</h3>' +
+    '<button class="row" data-auth="google" style="gap:14px"><span style="display:grid;place-items:center;width:24px;height:24px">' +
+      '<svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>' +
+      '</span><span class="t">Google<small>Sign in with your Google account</small></span>' + chev + "</button>" +
+    '<button class="row" data-auth="gmail" style="gap:14px"><span style="display:grid;place-items:center;width:24px;height:24px">' +
+      '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>' +
+      '</span><span class="t">Gmail<small>Use your Gmail address</small></span>' + chev + "</button>" +
+    '<button class="row" data-auth="phone" style="gap:14px"><span style="display:grid;place-items:center;width:24px;height:24px">' +
+      '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>' +
+      '</span><span class="t">Phone number<small>Sign in with a mobile number</small></span>' + chev + "</button></div>" +
+    '<p class="note">For real Google Sign-In, set <code>GOOGLE_CLIENT_ID</code> in the script. Without it, sign-in runs in demo mode and stores only locally.</p>', el => {
+    el.addEventListener("click", e => {
+      const b = e.target.closest("[data-auth]"); if (!b) return;
+      const m = b.dataset.auth;
+      if (m === "google") signInWithGoogle();
+      else if (m === "gmail") signInWithGmail();
+      else if (m === "phone") { closeSheet(el); openPhoneAuth(); }
+    });
+  });
+}
+
+/* ---------- voice input ---------- */
+let heard = "", partial = "", listening = false, busy = false, rec = null;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const canListen = !!SR;
+function startListening(){
+  rec = new SR();
+  rec.lang = S.src === "auto" ? (navigator.language || "en-US") : (speechCode(S.src) || "en-US");
+  rec.interimResults = true; rec.continuous = false;
+  heard = ""; partial = "";
+  rec.onstart = () => { listening = true; micUI("listening"); };
+  rec.onresult = e => {
+    let f = "", p = "";
+    for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) f += r[0].transcript; else p += r[0].transcript; }
+    heard = f; partial = p; renderLive();
+  };
+  rec.onerror = e => {
+    const m = {"not-allowed":"Microphone access is blocked. Allow it in your browser settings, or type instead.", "service-not-allowed":"Microphone access is blocked. Allow it in your browser settings, or type instead.",
+      "no-speech":"I did not hear anything. Tap the microphone and try again.", "language-not-supported":"Voice input for " + lname(S.src) + " is not supported here. Type instead.", "network":"Voice input needs an internet connection."};
+    if (e.error !== "aborted") toast(m[e.error] || "Voice input stopped.");
+  };
+  rec.onend = () => { listening = false; const t = (heard + " " + partial).trim(); heard = ""; partial = ""; micUI("idle"); if (t) translate(t); };
+  rec.start();
+}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){
+  clearTimeout(toastTimer);
+  $("toastHost").innerHTML = '<div class="toast" role="status">' + esc(msg) + "</div>";
+  toastTimer = setTimeout(() => $("toastHost").innerHTML = "", 3200);
+}
+
+/* ---------- thread ---------- */
+const turns = [];
+function renderThread(){
+  const el = $("thread");
+  let h = "";
+  if (!turns.length && !listening && !heard && !partial && !busy) {
+    h = '<div class="empty"><h2>Speak. Hear it in any language.</h2><p>Tap the microphone, or try one of these.</p><div class="chips">' +
+      EXAMPLES.map(t => '<button class="chip" data-ex="' + esc(t) + '">' + esc(t) + "</button>").join("") + "</div></div>";
+  }
+  turns.forEach((t, i) => {
+    h += '<article class="turn"><div class="orig"><i>' + esc(t.from) + "</i>" + esc(t.text) + "</div>" +
+      '<p class="tr" lang="' + esc(speechCode(t.tgt)) + '">' + esc(t.out) + "</p>" +
+      (t.pron ? '<p class="pron">' + esc(t.pron) + "</p>" : "") +
+      '<div class="acts"><button class="chip" data-speak="' + i + '"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Listen</button>' +
+      '<button class="chip" data-copy="' + i + '"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>Copy</button></div></article>';
+  });
+  h += '<div id="live"></div>';
+  el.innerHTML = h;
+  renderLive();
+  el.scrollTop = el.scrollHeight;
+}
+function renderLive(){
+  const l = $("live"); if (!l) return;
+  if (busy) l.innerHTML = '<div class="live"><b>Translating…</b></div>';
+  else if (listening || heard || partial) l.innerHTML = '<div class="live"><b>Listening…</b> ' + esc((heard + " " + partial).trim()) + "</div>";
+  else l.innerHTML = "";
+  $("thread").scrollTop = $("thread").scrollHeight;
+}
+$("thread").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.ex) translate(b.dataset.ex);
+  else if (b.dataset.speak != null) speak(turns[+b.dataset.speak].out, turns[+b.dataset.speak].tgt);
+  else if (b.dataset.copy != null) copy(turns[+b.dataset.copy].out);
+});
+function copy(t){
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied"), () => toast("Press and hold the text to copy it"));
+}
+function speak(text, code){
+  if (!("speechSynthesis" in window)) return toast("This browser cannot read text aloud.");
+  const u = new SpeechSynthesisUtterance(text);
+  const sc = speechCode(code);
+  if (sc) {
+    u.lang = sc;
+    const v = speechSynthesis.getVoices();
+    if (v.length && !v.some(x => x.lang.toLowerCase().startsWith(sc.slice(0,2).toLowerCase()))) toast("No " + lname(code) + " voice on this device. Reading with the default voice.");
+  }
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ---------- translate ---------- */
+async function translate(text){
+  text = text.trim(); if (!text || busy) return;
+  busy = true; renderThread();
+  try {
+    const res = await fetch("/api/translate", {method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({text, source: S.src === "auto" ? null : lname(S.src), target: lname(S.tgt)})});
+    if (!res.ok) { const err = new Error("http"); err.status = res.status; throw err; }
+    const r = await res.json();
+    const out = String(r.translation || "").trim();
+    if (!out) throw new Error("empty");
+    const t = {text, out, pron: String(r.pronunciation || "").trim(), from: String(r.detected || lname(S.src)), tgt: S.tgt};
+    turns.push(t);
+    const u = usageToday(); u.n++;
+    if (S.settings.saveHistory) { S.history.unshift({id: Date.now(), ts: Date.now(), text, out, from: t.from, tgt: S.tgt}); S.history = S.history.slice(0, 200); }
+    save();
+    busy = false; renderThread();
+    if (S.settings.autoSpeak) speak(out, S.tgt);
+  } catch(e) {
+    busy = false; renderThread();
+    toast(e && e.status === 429 ? "Too many requests. Wait a moment and try again." : e && e.status === 413 ? "That text is too long. Try a shorter sentence." : !navigator.onLine ? "You are offline. Connect to the internet to translate." : "Could not translate that. Try again.");
+  }
+}
+
+/* ---------- mic + typing ---------- */
+function micUI(state){
+  const b = $("micBtn");
+  b.classList.toggle("on", state === "listening");
+  $("micLabel").textContent = state === "starting" ? "Starting…" : state === "listening" ? "Listening… tap to stop" : state === "finishing" ? "Finishing…" : "Tap to speak";
+  renderThread();
+}
+$("micBtn").addEventListener("click", () => {
+  if (!canListen) { S.settings.typeBar = true; syncTypebar(true); toast("Voice input is not supported in this browser. Type instead, or use Chrome."); return; }
+  if (listening) { try { rec.stop(); } catch(e){} return; }
+  try { startListening(); } catch(e) { toast("The microphone could not start."); }
+});
+function syncTypebar(focus){
+  const show = S.settings.typeBar || !canListen;
+  $("typebar").hidden = !show;
+  if (show && focus) $("typeInput").focus();
+}
+$("typebar").addEventListener("submit", e => { e.preventDefault(); const v = $("typeInput").value; $("typeInput").value = ""; translate(v); });
+
+/* ---------- language pair ---------- */
+function syncPair(){ $("srcName").textContent = lname(S.src); $("tgtName").textContent = lname(S.tgt); }
+$("swapBtn").addEventListener("click", () => {
+  if (S.src === "auto") return toast("Choose a From language to swap.");
+  [S.src, S.tgt] = [S.tgt, S.src]; save(); syncPair();
+});
+$("srcBtn").addEventListener("click", () => openLang("src"));
+$("tgtBtn").addEventListener("click", () => openLang("tgt"));
+$("langBtn").addEventListener("click", () => openLang("tgt"));
+
+/* ---------- sheets ---------- */
+const stack = [];
+function openSheet(title, bodyHtml, onMount){
+  const el = document.createElement("div");
+  el.className = "sheet";
+  el.innerHTML = '<section class="panel" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="phead"><h2>' + esc(title) +
+    '</h2><button class="iconbtn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="pbody">' + bodyHtml + "</div></section>";
+  $("layer").appendChild(el); stack.push(el);
+  el.addEventListener("click", e => { if (e.target === el || e.target.closest("[data-close]")) closeSheet(el); });
+  if (onMount) onMount(el);
+  return el;
+}
+function closeSheet(el){ el = el || stack[stack.length-1]; if (!el) return; el.remove(); const i = stack.indexOf(el); if (i > -1) stack.splice(i,1); }
+function closeAllSheets(){ stack.slice().forEach(closeSheet); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+const chev = '<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+
+/* ---------- language sheet ---------- */
+function openLang(which){
+  let tab = which, q = "";
+  openSheet("Language", '<div class="seg" role="tablist"><button role="tab" data-tab="src">I speak</button><button role="tab" data-tab="tgt">Translate to</button></div>' +
+    '<input class="field" id="langQ" type="search" placeholder="Search any language" autocomplete="off"><div id="langList" style="margin-top:6px"></div>', el => {
+    const list = el.querySelector("#langList");
+    function draw(){
+      el.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+      const cur = S[tab], ql = q.trim().toLowerCase();
+      let items = LANGS.filter(l => !ql || l.name.toLowerCase().includes(ql) || l.native.toLowerCase().includes(ql) || l.code.toLowerCase() === ql);
+      let h = "";
+      if (tab === "src" && !ql) h += '<button class="lang" data-code="auto" aria-current="' + (cur === "auto") + '"><span>Detect language<br><small>Works out what was spoken</small></span></button>';
+      h += items.map(l => '<button class="lang" data-code="' + l.code + '" aria-current="' + (cur === l.code) + '"><span>' + esc(l.name) + "<br><small>" + esc(l.native) + "</small></span></button>").join("");
+      if (ql && !LANGS.some(l => l.name.toLowerCase() === ql)) h += '<button class="lang" data-code="' + esc("x:" + q.trim()) + '"><span>Use “' + esc(q.trim()) + '”<br><small>Any language or dialect, even if it is not listed</small></span></button>';
+      list.innerHTML = h;
+    }
+    draw();
+    el.querySelector(".seg").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; draw(); } });
+    el.querySelector("#langQ").addEventListener("input", e => { q = e.target.value; draw(); });
+    list.addEventListener("click", e => { const b = e.target.closest("[data-code]"); if (!b) return; S[tab] = b.dataset.code; save(); syncPair(); draw(); if (tab === "src") { tab = "tgt"; draw(); } else closeSheet(el); });
+  });
+}
+
+/* ---------- analysis sheet ---------- */
+function lastDays(n){
+  const out = [];
+  for (let i = n-1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push({key: dayKey(d), label: d.toLocaleDateString(undefined, {weekday:"short"}).slice(0,3), today: i === 0}); }
+  return out;
+}
+function openStats(){
+  const real = Object.values(S.usage).some(u => u.n > 0 || u.secs >= 60);
+  const days = lastDays(7);
+  const SAMPLE_N = [4,7,3,9,6,11,5], SAMPLE_M = [6,12,5,15,9,18,8];
+  const nums = days.map((d,i) => real ? (S.usage[d.key]?.n || 0) : SAMPLE_N[i]);
+  const mins = days.map((d,i) => real ? Math.round((S.usage[d.key]?.secs || 0) / 60) : SAMPLE_M[i]);
+  const pairs = {}; (real ? S.history : []).forEach(h => { pairs[h.tgt] = (pairs[h.tgt] || 0) + 1; });
+  const top = Object.entries(pairs).sort((a,b) => b[1]-a[1])[0];
+  const topName = real ? (top ? lname(top[0]) : "None yet") : "Nepali";
+  function bars(arr, unit){
+    const mx = Math.max(1, ...arr);
+    return '<div class="bars">' + arr.map(v => '<div class="bar"><em>' + v + '</em><i class="' + (v ? "" : "zero") + '" style="height:' + Math.max(3, Math.round(v / mx * 80)) + 'px" title="' + v + " " + unit + '"></i></div>').join("") + '</div><div class="days">' +
+      days.map(d => '<span class="' + (d.today ? "today" : "") + '">' + esc(d.label) + "</span>").join("") + "</div>";
+  }
+  openSheet("Daily analysis", (real ? "" : '<p class="note" style="margin:0 0 12px"><span class="badge" style="margin:0 6px 0 0">Example</span>Your own numbers replace these after you translate something.</p>') +
+    '<div class="tiles"><div class="tile"><b>' + nums[6] + '</b><small>Today</small></div><div class="tile"><b>' + (real ? Math.round(usageToday().secs / 60) : mins[6]) + '<span style="font-size:13px"> min</span></b><small>Time spent</small></div><div class="tile"><b>' + esc(topName) + '</b><small>Top language</small></div></div>' +
+    '<div class="chart"><h3>Translations per day</h3>' + bars(nums, "translations") + "</div>" +
+    '<div class="chart"><h3>Minutes spent per day</h3>' + bars(mins, "minutes") + "</div>" +
+    '<button class="btn ghost" id="toHist" style="width:100%">Open history</button>', el => { el.querySelector("#toHist").addEventListener("click", () => { closeSheet(el); openHistory(); }); });
+}
+$("statsBtn").addEventListener("click", openStats);
+
+/* ---------- menu ---------- */
+$("menuBtn").addEventListener("click", () => {
+  const signed = isSignedIn();
+  const label = signed ? (S.auth.provider === "Phone" ? "Signed in · " + esc(S.auth.phone) : "Signed in · " + esc(S.auth.email || S.auth.provider)) : "Sign in or create an account";
+  openSheet("Menu", '<div class="group"><h3>Account</h3><button class="row" data-go="' + (signed ? "account" : "signin") + '" style="gap:12px">' +
+    '<span class="t">' + (signed ? "Account<small>" + label + "</small>" : "Sign in<small>Google, Gmail, or phone number</small>") + "</span>" + chev + "</button></div>" +
+    '<div class="group"><h3>Connection</h3><button class="row" data-go="keyboard"><span class="t">Keyboard<small>Type to translate</small></span>' + chev + "</button></div>" +
+    '<div class="group"><h3>Settings</h3><button class="row" data-go="privacy"><span class="t">Privacy</span>' + chev + '</button><button class="row" data-go="account"><span class="t">Account</span>' + chev + '</button><button class="row" data-go="history"><span class="t">History</span>' + chev + "</button></div>", el => {
+    el.addEventListener("click", e => { const b = e.target.closest("[data-go]"); if (!b) return; ({keyboard: openKeyboard, privacy: openPrivacy, account: openAccount, history: openHistory, signin: openSignIn})[b.dataset.go](); });
+  });
+});
+
+function toggleRow(id, title, sub, on){
+  return '<button class="row" data-tog="' + id + '" role="switch" aria-checked="' + on + '"><span class="t">' + esc(title) + (sub ? "<small>" + esc(sub) + "</small>" : "") + '</span><span class="tog" aria-hidden="true" data-knob aria-checked="' + on + '"></span></button>';
+}
+function wireToggles(el, onChange){
+  el.addEventListener("click", e => {
+    const b = e.target.closest("[data-tog]"); if (!b) return;
+    const k = b.dataset.tog, v = !S.settings[k]; S.settings[k] = v; save();
+    b.setAttribute("aria-checked", String(v)); b.querySelector("[data-knob]").setAttribute("aria-checked", String(v));
+    if (onChange) onChange(k, v);
+  });
+}
+
+function openKeyboard(){
+  openSheet("Keyboard", '<div class="group"><h3>Type to translate</h3><textarea class="field" id="kbText" placeholder="Type or paste text in any language" aria-label="Text to translate"></textarea>' +
+    '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="kbGo" style="flex:1">Translate to ' + esc(lname(S.tgt)) + '</button></div></div>' +
+    '<div class="group">' + toggleRow("typeBar", "Typing bar on home screen", "Keep a text field above the microphone", S.settings.typeBar) + "</div>" +
+    '<p class="note">A keyboard that translates inside other apps needs a phone app. Here you can type, paste and translate.</p>', el => {
+    el.querySelector("#kbGo").addEventListener("click", () => { const v = el.querySelector("#kbText").value; if (v.trim()) { closeSheet(el); closeSheet(); translate(v); } });
+    wireToggles(el, () => syncTypebar());
+  });
+}
+function openPrivacy(){
+  openSheet("Privacy", '<div class="group"><h3>On this device</h3>' + toggleRow("saveHistory", "Save history", "Keep translations in History on this device", S.settings.saveHistory) +
+    toggleRow("autoSpeak", "Read translations aloud", "Speak each result automatically", S.settings.autoSpeak) + "</div>" +
+    '<div class="group"><h3>Your data</h3><button class="btn danger" id="wipe" style="width:100%">Delete history and analysis</button></div>' +
+    '<p class="note">Voice is turned into text by your browser speech service when you tap the microphone. Text you translate is sent to the Vtwo server and translated with Claude. History and analysis stay only on this device.</p>', el => {
+    wireToggles(el);
+    const w = el.querySelector("#wipe");
+    w.addEventListener("click", () => {
+      if (w.dataset.sure) { S.history = []; S.usage = {}; save(); turns.length = 0; renderThread(); toast("History and analysis deleted"); closeSheet(el); }
+      else { w.dataset.sure = "1"; w.textContent = "Tap again to delete everything"; }
+    });
+  });
+}
+function openAccount(){
+  const signed = isSignedIn();
+  const nameHtml = '<div class="group"><h3>Profile</h3><input class="field" id="acName" placeholder="Your name" value="' + esc(S.settings.name) + '" maxlength="40" aria-label="Your name"></div>';
+  let authHtml = "";
+  if (signed) {
+    let detail = "";
+    if (S.auth.provider === "Phone") detail = "Phone · " + esc(S.auth.phone);
+    else detail = esc(S.auth.provider) + " · " + esc(S.auth.email || "");
+    const pic = S.auth.picture ? '<img src="' + esc(S.auth.picture) + '" alt="" style="width:32px;height:32px;border-radius:50%">' : '';
+    authHtml = '<div class="group"><h3>Signed in</h3>' +
+      '<div class="row" style="border-radius:12px">' + pic + '<span class="t">' + esc(S.auth.name || S.auth.provider) + '<small>' + detail + '</small></span></div>' +
+      '<div style="margin-top:12px"><button class="btn danger" id="signOutBtn" style="width:100%">Sign out</button></div></div>';
+  } else {
+    authHtml = '<div class="group"><h3>Sign in</h3>' +
+      '<button class="row" data-auth="google" style="gap:14px"><span style="display:grid;place-items:center;width:24px;height:24px">' +
+        '<svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>' +
+        '</span><span class="t">Google<small>Sign in with your Google account</small></span>' + chev + "</button>" +
+      '<button class="row" data-auth="gmail" style="gap:14px"><span style="display:grid;place-items:center;width:24px;height:24px">' +
+        '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>' +
+        '</span><span class="t">Gmail<small>Use your Gmail address</small></span>' + chev + "</button>" +
+      '<button class="row" data-auth="phone" style="gap:14px"><span style="display:grid;place-items:center;width:24px;height:24px">' +
+        '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>' +
+        '</span><span class="t">Phone number<small>Sign in with a mobile number</small></span>' + chev + "</button></div>";
+  }
+  openSheet("Account", nameHtml + authHtml +
+    '<div class="group"><h3>Defaults</h3><button class="row" id="acLang"><span class="t">Translate to<small>' + esc(lname(S.tgt)) + "</small></span>" + chev + "</button></div>" +
+    '<p class="note">Your name and settings stay in this browser. Google Sign-In uses real OAuth when a Client ID is configured.</p>', el => {
+    el.querySelector("#acName").addEventListener("input", e => { S.settings.name = e.target.value; save(); });
+    el.querySelector("#acLang").addEventListener("click", () => openLang("tgt"));
+    const so = el.querySelector("#signOutBtn");
+    if (so) so.addEventListener("click", () => { signOut(); openAccount(); });
+    el.addEventListener("click", e => {
+      const b = e.target.closest("[data-auth]"); if (!b) return;
+      const m = b.dataset.auth;
+      if (m === "google") signInWithGoogle();
+      else if (m === "gmail") signInWithGmail();
+      else if (m === "phone") { closeSheet(el); openPhoneAuth(); }
+    });
+  });
+}
+function openHistory(){
+  const rows = S.history.map(h => '<div class="hist"><div class="o">' + esc(h.from) + ": " + esc(h.text) + '</div><div class="n">' + esc(h.out) + '</div><div class="m"><span>' + esc(lname(h.tgt)) + " · " + new Date(h.ts).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) +
+    '</span><span><button data-hl="' + h.id + '">Listen</button><button data-hd="' + h.id + '">Delete</button></span></div></div>').join("");
+  openSheet("History", rows || '<p class="note">Nothing here yet. Translations you make are saved on this device' + (S.settings.saveHistory ? "." : ", once History is turned on in Privacy."), el => {
+    el.addEventListener("click", e => {
+      const l = e.target.closest("[data-hl]"), d = e.target.closest("[data-hd]");
+      if (l) { const h = S.history.find(x => x.id == l.dataset.hl); if (h) speak(h.out, h.tgt); }
+      if (d) { S.history = S.history.filter(x => x.id != d.dataset.hd); save(); closeSheet(el); openHistory(); }
+    });
+  });
+}
+
+/* ---------- time spent ---------- */
+let tick = 0;
+setInterval(() => { if (document.visibilityState === "visible") { usageToday().secs++; if (++tick % 15 === 0) save(); } }, 1000);
+addEventListener("pagehide", save);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") save(); });
+
+/* ---------- Google Identity Services ready ---------- */
+window.addEventListener("load", () => {
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    googleReady = true;
+  } else {
+    // GIS may still be loading; poll briefly
+    let tries = 0;
+    const iv = setInterval(() => {
+      if (window.google && window.google.accounts && window.google.accounts.id) { googleReady = true; clearInterval(iv); }
+      else if (++tries > 20) clearInterval(iv);
+    }, 200);
+  }
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+});
+
+/* ---------- init ---------- */
+syncPair(); renderThread(); syncTypebar();
+</script>
+</body>
+</html>
